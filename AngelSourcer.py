@@ -1,5 +1,6 @@
 #AngelSourcer
 #A script that automates reaching out to candidates on AngelList 
+#Written for Black SMS
 #By Ray Iyer
 
 #coding: utf-8
@@ -10,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 
 
-SOURCE_URL = 'https://angel.co/black-sms/source?query=%22React%22&refinementList%5Blocations%5D%5B0%5D=San%20Francisco%20Bay%20Area&refinementList%5Bprimary_role%5D%5B0%5D=Full-Stack%20Developer&refinementList%5Blooking_for%5D%5B0%5D=Full%20Time'
+SOURCE_URL = 'https://angel.co/black-sms/source?query=%22React%22&refinementList%5Blocations%5D%5B0%5D=San%20Francisco%20Bay%20Area&refinementList%5Bprimary_role%5D%5B0%5D=Software%20Engineer&refinementList%5Blooking_for%5D%5B0%5D=Full%20Time&refinementList%5Bdev_bootcamp%5D%5B0%5D=false&refinementList%5Btags_skills%5D=&numeric%5Byears_experience_in_primary_role%5D%5Bmin%5D=2&numeric%5Byears_experience_in_primary_role%5D%5Bmax%5D=20&numeric%5Btop_X_user_startup%5D%5Bmin%5D=0&numeric%5Btop_X_user_startup%5D%5Bmax%5D=20'
 
 OUTREACH = ". I hope you are doing well and enjoying your summer! I'm reaching out because we are building out a stellar team at Black SMS (http://blacksms.net). We are backed by the best and work with some pretty awesome people, like the 14th employee at Firebase (acquired by Google) and the first iOS engineer at Hike Messenger, a unicorn startup that developed one of India's most popular messengers with over 100 million active users. You would have the opportunity to be one of the first 3 engineers at a super high-potential startup! If you are interested in joining a team of intentional, intelligent developers, I'd love to chat."
 
@@ -29,8 +30,8 @@ def initializeAngelList():
 
 def login(driver):
 	print("Logging in...")
-	#username = raw_input("What is your AngelList email? ")
-	#password = raw_input("What is your password? ")
+	username = raw_input("What is your AngelList email? ")
+	password = raw_input("What is your password? ")
 	userElem = driver.find_element_by_id('user_email')
 	userElem.send_keys(username)
 	passElem = driver.find_element_by_id('user_password')
@@ -60,19 +61,25 @@ def load_profiles(driver):
             break
         last_height = new_height
 
+
 def send_messages(driver):
 	time.sleep(15)
 	introButtons = driver.find_elements_by_css_selector('.icon-only')
-	names = driver.find_elements_by_css_selector('.ais-Highlight__nonHighlighted')
 	print("Found %s potential candidates..." % len(introButtons))
 	print("Sending messages...")
+
 	for button in introButtons:
 		button.click()
-	#textboxes = driver.find_elements_by_xpath("//*[@id='layouts-base-body']/div[1]/div[2]/div/div[2]/div/div/div/div[2]/div/div/div[2]/div/div[1]/div[2]/div/form/textarea")
+
 	textboxes = driver.find_elements_by_tag_name("textarea")
 	textboxes.pop() #Bug fix, removes trailing textbox (not an actual candidate profile)
 	for i, textbox in enumerate(textboxes):
-		textbox.send_keys("Hey, " + names[i].text.split()[0] + OUTREACH)
+		#Sneaky trick, get candidates name from textbox placeholder, use to personalize message
+		name = textbox.get_attribute('placeholder').split()[4]
+		textbox.send_keys("Hey, " + name + OUTREACH)
+		if (i + 1) % 10 == 0:
+			print("%s candidate messages pasted..." % (i + 1))
+
 	sendButtons = driver.find_elements_by_xpath('//input[@type="submit" and @value="Send and Get Intro"]')
 	for sendButton in sendButtons:
 		sendButton.click()
@@ -80,14 +87,9 @@ def send_messages(driver):
 
 def main():
 	driver = initializeAngelList()
-	#load_profiles(driver)
+	load_profiles(driver)
 	send_messages(driver)
 	
 if __name__ == "__main__":
 	main()
-
-	
-
-
-
 
